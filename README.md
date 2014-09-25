@@ -1,4 +1,4 @@
 maven-cachebuster-plugin
 ========================
 
-Simple Cache Busting Maven plugin for CSS and JS
+Simple Cache Busting Maven plugin for url references in CSS resources.
