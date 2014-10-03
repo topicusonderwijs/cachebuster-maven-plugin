@@ -121,13 +121,19 @@ public class FingerprintMojo extends AbstractMojo
 		getLog().debug("Source file: " + file.getAbsolutePath());
 		Path output = createOutputDirectory(file);
 		File outputFile = new File(output.toString(), file.getName());
-		getLog().debug("Output ifle: " + outputFile.getAbsolutePath());
+		File tempOutputFile = new File(output.toString(), file.getName() + ".tmp");
+		getLog().debug("Output file: " + outputFile.getAbsolutePath());
 
 		if (!outputFile.exists() || FileUtils.isFileOlder(outputFile, file))
 		{
 			getLog().info("Fingerprinting source: " + file.getName() + "...");
+			if (outputFile.exists() && !outputFile.delete())
+			{
+				getLog().error(
+					"Failed to delete output file '" + outputFile.getAbsolutePath() + "'!");
+			}
 			char[] buffer = new char[DEFAULT_BUFFER_SIZE];
-			try (Reader reader = createReader(file); Writer writer = createWriter(outputFile))
+			try (Reader reader = createReader(file); Writer writer = createWriter(tempOutputFile))
 			{
 				int numRead = 0;
 				do
@@ -137,12 +143,18 @@ public class FingerprintMojo extends AbstractMojo
 						writer.write(buffer, 0, numRead);
 				}
 				while (numRead != -1);
-				outputFile.setLastModified(file.lastModified());
 			}
 			catch (IOException e)
 			{
+				tempOutputFile.delete();
 				throw new MojoFailureException("I/O exception during fingerprinting "
 					+ file.getAbsolutePath() + "!", e);
+			}
+			if (!tempOutputFile.renameTo(outputFile))
+			{
+				getLog().error(
+					"Failed to rename temporary output file '" + tempOutputFile.getAbsolutePath()
+						+ "' to '" + outputFile.getAbsolutePath() + "'!");
 			}
 		}
 		else
@@ -212,7 +224,11 @@ public class FingerprintMojo extends AbstractMojo
 			int end = matchResult.end();
 
 			Path imgFile = null;
-			if (matchResult.group(2).startsWith("../"))
+			if (matchResult.group(2).startsWith("data:"))
+			{
+				return new MatchProcessorResult(matchResult.end(), true);
+			}
+			else if (matchResult.group(2).startsWith("../"))
 			{
 				imgFile = stylesheetBasePath.resolve(matchResult.group(2)).normalize();
 			}

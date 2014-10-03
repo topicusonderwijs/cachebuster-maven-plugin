@@ -4,7 +4,7 @@
 
 	<parent>
 		<groupId>nl.topicus.onderwijs</groupId>
-		<artifactId>onderwijs-parent</artifactId>
+		<artifactId>onderwijs-maven-plugin-parent</artifactId>
 		<version>2012.2.94</version>
 	</parent>
 
@@ -15,84 +15,22 @@
 
 	<name>CacheBuster Maven Plugin</name>
 	<description></description>
-
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		
-		<java.version>1.7</java.version>
-
-		<maven-plugin-api.version>3.2.3</maven-plugin-api.version>
-		<maven-plugin-annotations.version>3.3</maven-plugin-annotations.version>
-		<plexus-utils.version>3.0.17</plexus-utils.version>
-		<plexus-classworlds.version>2.5.1</plexus-classworlds.version>
-		<streamflyer.version>1.1.2</streamflyer.version>
-
-		<maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
-		<maven-eclipse-plugin.version>2.9</maven-eclipse-plugin.version>
-		<eclipse-settings.version>2012.2.94</eclipse-settings.version>
-		<maven-plugin-plugin.version>3.3</maven-plugin-plugin.version>
-		<maven-source-plugin.version>2.3</maven-source-plugin.version>
-	</properties>
 	
+	<properties>
+		<streamflyer.version>1.1.2</streamflyer.version>
+	</properties>
+
 	<dependencyManagement>
 		<dependencies>
-			<dependency>
-				<groupId>org.apache.maven</groupId>
-				<artifactId>maven-artifact</artifactId>
-				<version>${maven-plugin-api.version}</version>
-				<scope>provided</scope>
-			</dependency>		
-			<dependency>
-				<groupId>org.apache.maven</groupId>
-				<artifactId>maven-core</artifactId>
-				<version>${maven-plugin-api.version}</version>
-				<scope>provided</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.maven</groupId>
-				<artifactId>maven-plugin-api</artifactId>
-				<version>${maven-plugin-api.version}</version>
-				<scope>provided</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.maven.plugin-tools</groupId>
-				<artifactId>maven-plugin-annotations</artifactId>
-				<version>${maven-plugin-annotations.version}</version>
-				<scope>provided</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.codehaus.plexus</groupId>
-				<artifactId>plexus-classworlds</artifactId>
-				<version>${plexus-classworlds.version}</version>
-				<scope>provided</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.codehaus.plexus</groupId>
-				<artifactId>plexus-utils</artifactId>
-				<version>${plexus-utils.version}</version>
-				<scope>provided</scope>
-			</dependency>
 			<dependency>
 				<groupId>com.googlecode.streamflyer</groupId>
 				<artifactId>streamflyer-core</artifactId>
 				<version>${streamflyer.version}</version>
-			</dependency>		
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
 	<dependencies>
-		<dependency>
-			<groupId>org.apache.maven</groupId>
-			<artifactId>maven-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.maven</groupId>
-			<artifactId>maven-plugin-api</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.maven.plugin-tools</groupId>
-			<artifactId>maven-plugin-annotations</artifactId>
-		</dependency>
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
@@ -108,151 +46,7 @@
 	</dependencies>
 
 	<build>
-		<pluginManagement>
-			<plugins>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-compiler-plugin</artifactId>
-					<version>${maven-compiler-plugin.version}</version>
-					<inherited>true</inherited>
-					<configuration>
-						<source>${java.version}</source>
-						<target>${java.version}</target>
-						<encoding>${project.build.sourceEncoding}</encoding>
-						<showWarnings>true</showWarnings>
-						<showDeprecation>true</showDeprecation>
-					</configuration>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-eclipse-plugin</artifactId>
-					<version>${maven-eclipse-plugin.version}</version>
-					<inherited>true</inherited>
-					<configuration>
-						<downloadSources>true</downloadSources>
-						<downloadJavadoc>false</downloadJavadoc>
-						<ajdtVersion>${java.version}</ajdtVersion>
-						<additionalConfig>
-							<file>
-								<name>.settings/edu.umd.cs.findbugs.plugin.eclipse.prefs</name>
-								<location>/edu.umd.cs.findbugs.plugin.eclipse.prefs</location>
-							</file>
-							<file>
-								<name>.settings/org.eclipse.core.resources.prefs</name>
-								<location>/org.eclipse.core.resources.prefs</location>
-							</file>
-							<file>
-								<name>.settings/org.eclipse.jdt.apt.core.prefs</name>
-								<location>/org.eclipse.jdt.apt.core.prefs</location>
-							</file>
-							<file>
-								<name>.settings/org.eclipse.jdt.core.prefs</name>
-								<location>/org.eclipse.jdt.core.prefs</location>
-							</file>
-							<file>
-								<name>.settings/org.eclipse.jdt.ui.prefs</name>
-								<location>/org.eclipse.jdt.ui.prefs</location>
-							</file>
-							<file>
-								<name>.settings/org.eclipse.m2e.core.prefs</name>
-								<location>/org.eclipse.m2e.core.prefs</location>
-							</file>
-							<file>
-								<name>.settings/org.eclipse.wst.validation.prefs</name>
-								<location>/org.eclipse.wst.validation.prefs</location>
-							</file>
-							<file>
-								<name>.settings/org.maven.ide.eclipse.prefs</name>
-								<location>/org.maven.ide.eclipse.prefs</location>
-							</file>
-						</additionalConfig>
-					</configuration>
-					<dependencies>
-						<dependency>
-							<groupId>nl.topicus.onderwijs</groupId>
-							<artifactId>eclipse-settings</artifactId>
-							<version>${eclipse-settings.version}</version>
-						</dependency>
-					</dependencies>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-plugin-plugin</artifactId>
-					<version>${maven-plugin-plugin.version}</version>
-					<configuration>
-						<skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
-					</configuration>
-					<executions>
-						<execution>
-							<id>mojo-descriptor</id>
-							<goals>
-								<goal>descriptor</goal>
-							</goals>
-						</execution>
-						<execution>
-							<id>help-goal</id>
-							<goals>
-								<goal>helpmojo</goal>
-							</goals>
-						</execution>
-					</executions>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-source-plugin</artifactId>
-					<version>${maven-source-plugin.version}</version>
-					<executions>
-						<execution>
-							<id>attach-sources</id>
-							<goals>
-								<goal>jar</goal>
-							</goals>
-						</execution>
-					</executions>
-				</plugin>
-				<!--This plugin's configuration is used to store Eclipse m2e settings 
-					only. It has no influence on the Maven build itself. -->
-				<plugin>
-					<groupId>org.eclipse.m2e</groupId>
-					<artifactId>lifecycle-mapping</artifactId>
-					<version>1.0.0</version>
-					<configuration>
-						<lifecycleMappingMetadata>
-							<pluginExecutions>
-								<pluginExecution>
-									<pluginExecutionFilter>
-										<groupId>
-											org.apache.maven.plugins
-										</groupId>
-										<artifactId>
-											maven-plugin-plugin
-										</artifactId>
-										<versionRange>[3.3,)</versionRange>
-										<goals>
-											<goal>descriptor</goal>
-											<goal>helpmojo</goal>
-										</goals>
-									</pluginExecutionFilter>
-									<action>
-										<ignore />
-									</action>
-								</pluginExecution>
-							</pluginExecutions>
-						</lifecycleMappingMetadata>
-					</configuration>
-				</plugin>
-			</plugins>
-		</pluginManagement>
-
 		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-plugin-plugin</artifactId>
-			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
