@@ -5,12 +5,12 @@
 	<parent>
 		<groupId>nl.topicus.onderwijs</groupId>
 		<artifactId>onderwijs-maven-plugin-parent</artifactId>
-		<version>2012.2.94</version>
+		<version>2012.2.109</version>
 	</parent>
 
 	<groupId>nl.topicus</groupId>
 	<artifactId>cachebuster-maven-plugin</artifactId>
-	<version>1.0-SNAPSHOT</version>
+	<version>1.1-SNAPSHOT</version>
 	<packaging>maven-plugin</packaging>
 
 	<name>CacheBuster Maven Plugin</name>

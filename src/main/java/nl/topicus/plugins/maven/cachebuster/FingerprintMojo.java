@@ -9,6 +9,7 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
@@ -29,6 +30,7 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.BaseEncoding;
 import com.googlecode.streamflyer.core.Modifier;
 import com.googlecode.streamflyer.core.ModifyingWriter;
@@ -44,28 +46,21 @@ public class FingerprintMojo extends AbstractMojo
 
 	private static final String CSS_IMG_PATTERN = "(url\\([\"|']?)(.*?)(\\?.*?|#.*?)?([\"|']?\\))";
 
-	// @Component
-	// private BuildContext buildContext;
-
-	// @Parameter(defaultValue = "${project}", property = "project", required =
-	// true, readonly = true)
-	// private MavenProject project;
-
 	private boolean isInitialized = false;
 
 	@Parameter(required = true, defaultValue = "${basedir}/src/main/webapp")
 	private File stylesheetSourceDirectory;
 
 	// base directory for css relative url resolving
-	@Parameter(required = true, defaultValue = "${basedir}/src/main/webapp")
-	private File stylesheetBaseDirectory;
+	@Parameter(required = true)
+	private File[] stylesheetBaseDirectories;
 
 	@Parameter(required = true, defaultValue = "${project.build.outputDirectory}")
 	private File outputDirectory;
 
 	private Path stylesheetSourcePath;
 
-	private Path stylesheetBasePath;
+	private List<Path> stylesheetBasePaths;
 
 	private Path outputPath;
 
@@ -90,8 +85,13 @@ public class FingerprintMojo extends AbstractMojo
 		stylesheetSourcePath =
 			FileSystems.getDefault().getPath(stylesheetSourceDirectory.getAbsolutePath());
 
-		stylesheetBasePath =
-			FileSystems.getDefault().getPath(stylesheetBaseDirectory.getAbsolutePath());
+		ImmutableList.Builder<Path> pathsBuilder = ImmutableList.builder();
+		for (File stylesheetBaseDirectory : stylesheetBaseDirectories)
+		{
+			pathsBuilder.add(FileSystems.getDefault().getPath(
+				stylesheetBaseDirectory.getAbsolutePath()));
+		}
+		stylesheetBasePaths = pathsBuilder.build();
 
 		outputPath = FileSystems.getDefault().getPath(outputDirectory.getAbsolutePath());
 
@@ -230,7 +230,14 @@ public class FingerprintMojo extends AbstractMojo
 			}
 			else if (matchResult.group(2).startsWith("../"))
 			{
-				imgFile = stylesheetBasePath.resolve(matchResult.group(2)).normalize();
+				for (Path path : stylesheetBasePaths)
+				{
+					imgFile = path.resolve(matchResult.group(2)).normalize();
+					if (imgFile.toFile().exists())
+					{
+						break;
+					}
+				}
 			}
 			else
 			{
@@ -239,9 +246,10 @@ public class FingerprintMojo extends AbstractMojo
 						matchResult.group(2));
 			}
 
-			if (!imgFile.toFile().exists())
+			if (imgFile == null || !imgFile.toFile().exists())
 			{
-				throw new RuntimeException("File '" + imgFile.toFile().getAbsolutePath()
+				throw new RuntimeException("File '"
+					+ (imgFile != null ? imgFile.toFile().getAbsolutePath() : "<unknown>")
 					+ "' does not exist!");
 			}
 
