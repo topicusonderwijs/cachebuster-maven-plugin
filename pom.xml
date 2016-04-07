@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
@@ -10,16 +9,16 @@
 
 	<groupId>nl.topicus</groupId>
 	<artifactId>cachebuster-maven-plugin</artifactId>
-	<version>1.2-SNAPSHOT</version>
+	<version>1.2</version>
 	<packaging>maven-plugin</packaging>
 
 	<name>CacheBuster Maven Plugin</name>
-	<description></description>
+	<description />
 
 	<scm>
 		<url>https://github.com/topicusonderwijs/cachebuster-maven-plugin</url>
 		<connection>scm:git:git@github.com:topicusonderwijs/cachebuster-maven-plugin.git</connection>
-		<tag>HEAD</tag>
+		<tag>cachebuster-maven-plugin-1.2</tag>
 	</scm>
 
 	<properties>
