@@ -9,10 +9,12 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
-import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import nl.topicus.plugins.maven.cachebuster.exception.MatchProcessorException;
 
@@ -28,15 +30,14 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 
+import com.github.rwitzel.streamflyer.core.Modifier;
+import com.github.rwitzel.streamflyer.core.ModifyingWriter;
+import com.github.rwitzel.streamflyer.regex.AbstractMatchProcessor;
+import com.github.rwitzel.streamflyer.regex.MatchProcessorResult;
+import com.github.rwitzel.streamflyer.regex.RegexModifier;
 import com.google.common.base.Charsets;
 import com.google.common.base.Stopwatch;
-import com.google.common.collect.ImmutableList;
 import com.google.common.io.BaseEncoding;
-import com.googlecode.streamflyer.core.Modifier;
-import com.googlecode.streamflyer.core.ModifyingWriter;
-import com.googlecode.streamflyer.regex.AbstractMatchProcessor;
-import com.googlecode.streamflyer.regex.MatchProcessorResult;
-import com.googlecode.streamflyer.regex.RegexModifier;
 
 @Mojo(name = "fingerprint", defaultPhase = LifecyclePhase.COMPILE,
 		requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
@@ -48,19 +49,19 @@ public class FingerprintMojo extends AbstractMojo
 
 	private boolean isInitialized = false;
 
-	@Parameter(required = true, defaultValue = "${basedir}/src/main/webapp")
+	@Parameter(required = true)
 	private File stylesheetSourceDirectory;
 
 	// base directory for css relative url resolving
 	@Parameter(required = true)
-	private File[] stylesheetBaseDirectories;
+	private Map<String, String> stylesheetBaseDirectories;
 
 	@Parameter(required = true, defaultValue = "${project.build.outputDirectory}")
 	private File outputDirectory;
 
 	private Path stylesheetSourcePath;
 
-	private List<Path> stylesheetBasePaths;
+	private Map<String, Path> stylesheetBasePaths;
 
 	private Path outputPath;
 
@@ -85,13 +86,15 @@ public class FingerprintMojo extends AbstractMojo
 		stylesheetSourcePath =
 			FileSystems.getDefault().getPath(stylesheetSourceDirectory.getAbsolutePath());
 
-		ImmutableList.Builder<Path> pathsBuilder = ImmutableList.builder();
-		for (File stylesheetBaseDirectory : stylesheetBaseDirectories)
-		{
-			pathsBuilder.add(FileSystems.getDefault().getPath(
-				stylesheetBaseDirectory.getAbsolutePath()));
-		}
-		stylesheetBasePaths = pathsBuilder.build();
+		stylesheetBasePaths =
+			stylesheetBaseDirectories
+				.entrySet()
+				.stream()
+				.collect(
+					Collectors.toMap(
+						Entry::getKey,
+						v -> FileSystems.getDefault().getPath(
+							new File(v.getValue()).getAbsolutePath())));
 
 		outputPath = FileSystems.getDefault().getPath(outputDirectory.getAbsolutePath());
 
@@ -115,25 +118,26 @@ public class FingerprintMojo extends AbstractMojo
 				+ " ms");
 	}
 
-	private void fingerprintIfChanged(File file) throws MojoExecutionException,
+	private void fingerprintIfChanged(File cssFile) throws MojoExecutionException,
 			MojoFailureException
 	{
-		getLog().debug("Source file: " + file.getAbsolutePath());
-		Path output = createOutputDirectory(file);
-		File outputFile = new File(output.toString(), file.getName());
-		File tempOutputFile = new File(output.toString(), file.getName() + ".tmp");
+		getLog().debug("Source file: " + cssFile.getAbsolutePath());
+		Path output = createOutputDirectory(cssFile);
+		File outputFile = new File(output.toString(), cssFile.getName());
+		File tempOutputFile = new File(output.toString(), cssFile.getName() + ".tmp");
 		getLog().debug("Output file: " + outputFile.getAbsolutePath());
 
-		if (!outputFile.exists() || FileUtils.isFileOlder(outputFile, file))
+		if (!outputFile.exists() || FileUtils.isFileOlder(outputFile, cssFile))
 		{
-			getLog().info("Fingerprinting source: " + file.getName() + "...");
+			getLog().info("Fingerprinting source: " + cssFile.getName() + "...");
 			if (outputFile.exists() && !outputFile.delete())
 			{
 				getLog().error(
 					"Failed to delete output file '" + outputFile.getAbsolutePath() + "'!");
 			}
 			char[] buffer = new char[DEFAULT_BUFFER_SIZE];
-			try (Reader reader = createReader(file); Writer writer = createWriter(tempOutputFile))
+			try (Reader reader = createReader(cssFile);
+					Writer writer = createWriter(cssFile, tempOutputFile))
 			{
 				int numRead = 0;
 				do
@@ -148,7 +152,7 @@ public class FingerprintMojo extends AbstractMojo
 			{
 				tempOutputFile.delete();
 				throw new MojoFailureException("I/O exception during fingerprinting "
-					+ file.getAbsolutePath() + "!", e);
+					+ cssFile.getAbsolutePath() + "!", e);
 			}
 			if (!tempOutputFile.renameTo(outputFile))
 			{
@@ -159,13 +163,13 @@ public class FingerprintMojo extends AbstractMojo
 		}
 		else
 		{
-			getLog().info("Bypassing source: " + file.getName() + " (not modified)");
+			getLog().info("Bypassing source: " + cssFile.getName() + " (not modified)");
 		}
 	}
 
-	private Path createOutputDirectory(File file) throws MojoExecutionException
+	private Path createOutputDirectory(File cssFile) throws MojoExecutionException
 	{
-		Path output = Paths.get(file.getAbsolutePath()).getParent();
+		Path output = Paths.get(cssFile.getAbsolutePath()).getParent();
 		Path relativeParentPath = stylesheetSourcePath.relativize(output);
 		Path fullOutputPath =
 			relativeParentPath != null ? Paths.get(outputPath.toString(),
@@ -191,12 +195,12 @@ public class FingerprintMojo extends AbstractMojo
 		}
 	}
 
-	private Writer createWriter(File outputFile) throws MojoFailureException
+	private Writer createWriter(File cssFile, File outputFile) throws MojoFailureException
 	{
 		try
 		{
 			return new ModifyingWriter(new BufferedWriter(new OutputStreamWriter(
-				new FileOutputStream(outputFile))), createModifier());
+				new FileOutputStream(outputFile))), createModifier(cssFile));
 		}
 		catch (FileNotFoundException e)
 		{
@@ -205,9 +209,10 @@ public class FingerprintMojo extends AbstractMojo
 		}
 	}
 
-	private Modifier createModifier()
+	private Modifier createModifier(File cssFile)
 	{
-		return new RegexModifier(CSS_IMG_PATTERN, Pattern.MULTILINE, new RegexProcessor(), 0, 2048);
+		return new RegexModifier(CSS_IMG_PATTERN, Pattern.MULTILINE, new RegexProcessor(cssFile),
+			0, 2048);
 	}
 
 	class RegexProcessor extends AbstractMatchProcessor
@@ -215,6 +220,16 @@ public class FingerprintMojo extends AbstractMojo
 		private static final String DEFAULT_DIGEST_ALGORITHM = "MD5";
 
 		private static final String DEFAULT_VERSION_PREFIX = "-ver-";
+
+		private Path sharedPath;
+
+		private Path path;
+
+		public RegexProcessor(File cssFile)
+		{
+			this.sharedPath = stylesheetBasePaths.get("shared");
+			this.path = stylesheetBasePaths.get(cssFile.getName());
+		}
 
 		@Override
 		public MatchProcessorResult process(StringBuilder characterBuffer,
@@ -230,13 +245,12 @@ public class FingerprintMojo extends AbstractMojo
 			}
 			else if (matchResult.group(2).startsWith("../"))
 			{
-				for (Path path : stylesheetBasePaths)
+				imgFile =
+					path == null ? null : path.resolve(matchResult.group(2).substring(3))
+						.normalize();
+				if (sharedPath != null && (imgFile == null || !imgFile.toFile().exists()))
 				{
-					imgFile = path.resolve(matchResult.group(2)).normalize();
-					if (imgFile.toFile().exists())
-					{
-						break;
-					}
+					imgFile = sharedPath.resolve(matchResult.group(2).substring(3)).normalize();
 				}
 			}
 			else
