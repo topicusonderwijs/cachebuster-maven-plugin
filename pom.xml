@@ -16,6 +16,12 @@
 	<name>CacheBuster Maven Plugin</name>
 	<description></description>
 
+	<scm>
+		<url>https://github.com/topicusonderwijs/cachebuster-maven-plugin</url>
+		<connection>scm:git:git@github.com:topicusonderwijs/cachebuster-maven-plugin.git</connection>
+		<tag>HEAD</tag>
+	</scm>
+
 	<properties>
 		<streamflyer.version>1.2.0</streamflyer.version>
 	</properties>
