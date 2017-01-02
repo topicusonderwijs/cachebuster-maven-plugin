@@ -1,13 +1,13 @@
 #!groovy
 
-job.configuration { }
+config { }
 
 node(){
-	stage('checkout'){
-		checkout scm
-	}
+	git.checkout { }
 	
-	stage('maven build'){
-		maven.execute { }
-	}
+	maven { }
+
+        publishTestReports { }
+
+        notify { }
 }
