@@ -40,7 +40,7 @@ import com.google.common.base.Stopwatch;
 import com.google.common.io.BaseEncoding;
 
 @Mojo(name = "fingerprint", defaultPhase = LifecyclePhase.COMPILE,
-		requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)
+		requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME, threadSafe = true)
 public class FingerprintMojo extends AbstractMojo
 {
 	private static final int DEFAULT_BUFFER_SIZE = 4096;
@@ -79,22 +79,16 @@ public class FingerprintMojo extends AbstractMojo
 
 		if (!stylesheetSourceDirectory.exists())
 		{
-			throw new MojoFailureException("Stylesheet source directory '"
-				+ stylesheetSourceDirectory + "' does not exist!");
+			throw new MojoFailureException(
+				"Stylesheet source directory '" + stylesheetSourceDirectory + "' does not exist!");
 		}
 
 		stylesheetSourcePath =
 			FileSystems.getDefault().getPath(stylesheetSourceDirectory.getAbsolutePath());
 
 		stylesheetBasePaths =
-			stylesheetBaseDirectories
-				.entrySet()
-				.stream()
-				.collect(
-					Collectors.toMap(
-						Entry::getKey,
-						v -> FileSystems.getDefault().getPath(
-							new File(v.getValue()).getAbsolutePath())));
+			stylesheetBaseDirectories.entrySet().stream().collect(Collectors.toMap(Entry::getKey,
+				v -> FileSystems.getDefault().getPath(new File(v.getValue()).getAbsolutePath())));
 
 		outputPath = FileSystems.getDefault().getPath(outputDirectory.getAbsolutePath());
 
@@ -105,21 +99,19 @@ public class FingerprintMojo extends AbstractMojo
 	{
 		Stopwatch watch = Stopwatch.createStarted();
 
-		Iterator<File> fileIterator =
-			FileUtils.iterateFiles(stylesheetSourceDirectory, new SuffixFileFilter(".css"),
-				TrueFileFilter.INSTANCE);
+		Iterator<File> fileIterator = FileUtils.iterateFiles(stylesheetSourceDirectory,
+			new SuffixFileFilter(".css"), TrueFileFilter.INSTANCE);
 		while (fileIterator.hasNext())
 		{
 			fingerprintIfChanged(fileIterator.next());
 		}
 
-		getLog().info(
-			"Complete fingerprint job finished in " + watch.stop().elapsed(TimeUnit.MILLISECONDS)
-				+ " ms");
+		getLog().info("Complete fingerprint job finished in "
+			+ watch.stop().elapsed(TimeUnit.MILLISECONDS) + " ms");
 	}
 
-	private void fingerprintIfChanged(File cssFile) throws MojoExecutionException,
-			MojoFailureException
+	private void fingerprintIfChanged(File cssFile)
+			throws MojoExecutionException, MojoFailureException
 	{
 		getLog().debug("Source file: " + cssFile.getAbsolutePath());
 		Path output = createOutputDirectory(cssFile);
@@ -132,8 +124,8 @@ public class FingerprintMojo extends AbstractMojo
 			getLog().info("Fingerprinting source: " + cssFile.getName() + "...");
 			if (outputFile.exists() && !outputFile.delete())
 			{
-				getLog().error(
-					"Failed to delete output file '" + outputFile.getAbsolutePath() + "'!");
+				getLog()
+					.error("Failed to delete output file '" + outputFile.getAbsolutePath() + "'!");
 			}
 			char[] buffer = new char[DEFAULT_BUFFER_SIZE];
 			try (Reader reader = createReader(cssFile);
@@ -151,8 +143,8 @@ public class FingerprintMojo extends AbstractMojo
 			catch (IOException e)
 			{
 				tempOutputFile.delete();
-				throw new MojoFailureException("I/O exception during fingerprinting "
-					+ cssFile.getAbsolutePath() + "!", e);
+				throw new MojoFailureException(
+					"I/O exception during fingerprinting " + cssFile.getAbsolutePath() + "!", e);
 			}
 			if (!tempOutputFile.renameTo(outputFile))
 			{
@@ -171,13 +163,12 @@ public class FingerprintMojo extends AbstractMojo
 	{
 		Path output = Paths.get(cssFile.getAbsolutePath()).getParent();
 		Path relativeParentPath = stylesheetSourcePath.relativize(output);
-		Path fullOutputPath =
-			relativeParentPath != null ? Paths.get(outputPath.toString(),
-				relativeParentPath.toString()) : outputPath;
+		Path fullOutputPath = relativeParentPath != null
+			? Paths.get(outputPath.toString(), relativeParentPath.toString()) : outputPath;
 		if (!fullOutputPath.toFile().exists() && !fullOutputPath.toFile().mkdirs())
 		{
-			throw new MojoExecutionException("Cannot create output directory "
-				+ fullOutputPath.toString());
+			throw new MojoExecutionException(
+				"Cannot create output directory " + fullOutputPath.toString());
 		}
 		return fullOutputPath;
 	}
@@ -186,8 +177,8 @@ public class FingerprintMojo extends AbstractMojo
 	{
 		try
 		{
-			return new BufferedReader(new InputStreamReader(new FileInputStream(file),
-				Charsets.UTF_8));
+			return new BufferedReader(
+				new InputStreamReader(new FileInputStream(file), Charsets.UTF_8));
 		}
 		catch (FileNotFoundException e)
 		{
@@ -199,20 +190,21 @@ public class FingerprintMojo extends AbstractMojo
 	{
 		try
 		{
-			return new ModifyingWriter(new BufferedWriter(new OutputStreamWriter(
-				new FileOutputStream(outputFile))), createModifier(cssFile));
+			return new ModifyingWriter(
+				new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputFile))),
+				createModifier(cssFile));
 		}
 		catch (FileNotFoundException e)
 		{
-			throw new MojoFailureException("File " + outputFile.getAbsolutePath()
-				+ " cannot be opened for writing!", e);
+			throw new MojoFailureException(
+				"File " + outputFile.getAbsolutePath() + " cannot be opened for writing!", e);
 		}
 	}
 
 	private Modifier createModifier(File cssFile)
 	{
-		return new RegexModifier(CSS_IMG_PATTERN, Pattern.MULTILINE, new RegexProcessor(cssFile),
-			0, 2048);
+		return new RegexModifier(CSS_IMG_PATTERN, Pattern.MULTILINE, new RegexProcessor(cssFile), 0,
+			2048);
 	}
 
 	class RegexProcessor extends AbstractMatchProcessor
@@ -245,9 +237,8 @@ public class FingerprintMojo extends AbstractMojo
 			}
 			else if (matchResult.group(2).startsWith("../"))
 			{
-				imgFile =
-					path == null ? null : path.resolve(matchResult.group(2).substring(3))
-						.normalize();
+				imgFile = path == null ? null
+					: path.resolve(matchResult.group(2).substring(3)).normalize();
 				if (sharedPath != null && (imgFile == null || !imgFile.toFile().exists()))
 				{
 					imgFile = sharedPath.resolve(matchResult.group(2).substring(3)).normalize();
@@ -255,16 +246,15 @@ public class FingerprintMojo extends AbstractMojo
 			}
 			else
 			{
-				imgFile =
-					FileSystems.getDefault().getPath(stylesheetSourceDirectory.getAbsolutePath(),
-						matchResult.group(2));
+				imgFile = FileSystems.getDefault()
+					.getPath(stylesheetSourceDirectory.getAbsolutePath(), matchResult.group(2));
 			}
 
 			if (imgFile == null || !imgFile.toFile().exists())
 			{
-				throw new RuntimeException("File '"
-					+ (imgFile != null ? imgFile.toFile().getAbsolutePath() : "<unknown>")
-					+ "' does not exist!");
+				throw new RuntimeException(
+					"File '" + (imgFile != null ? imgFile.toFile().getAbsolutePath() : "<unknown>")
+						+ "' does not exist!");
 			}
 
 			byte[] buffer = new byte[1024];
@@ -322,9 +312,8 @@ public class FingerprintMojo extends AbstractMojo
 			String imgPath = FilenameUtils.getFullPath(fileName);
 			String imgBaseName = FilenameUtils.getBaseName(fileName);
 			String imgExtension = FilenameUtils.getExtension(fileName);
-			String fingerprintedFilename =
-				String.format("%s%s%s%s.%s", imgPath, imgBaseName, DEFAULT_VERSION_PREFIX,
-					md5Checksum, imgExtension);
+			String fingerprintedFilename = String.format("%s%s%s%s.%s", imgPath, imgBaseName,
+				DEFAULT_VERSION_PREFIX, md5Checksum, imgExtension);
 			getLog().debug("Fingerprinted: " + fingerprintedFilename);
 			return fingerprintedFilename;
 		}
