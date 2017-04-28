@@ -1,13 +1,13 @@
-#!groovy
-
 config { }
 
-node(){
+node() {
 	git.checkout { }
 	
-	maven { }
+	catchError {
+		maven { }
+	}
 
-        publishTestReports { }
+	publishTestReports { }
 
-        notify { }
+	notify { }
 }
