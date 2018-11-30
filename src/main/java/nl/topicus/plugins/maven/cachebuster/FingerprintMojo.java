@@ -16,8 +16,15 @@ import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.github.rwitzel.streamflyer.core.Modifier;
+import com.github.rwitzel.streamflyer.core.ModifyingWriter;
+import com.github.rwitzel.streamflyer.regex.AbstractMatchProcessor;
+import com.github.rwitzel.streamflyer.regex.MatchProcessorResult;
+import com.github.rwitzel.streamflyer.regex.RegexModifier;
+import com.google.common.base.Charsets;
+import com.google.common.base.Stopwatch;
+import com.google.common.io.BaseEncoding;
 import nl.topicus.plugins.maven.cachebuster.exception.MatchProcessorException;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.filefilter.SuffixFileFilter;
@@ -29,15 +36,6 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
-
-import com.github.rwitzel.streamflyer.core.Modifier;
-import com.github.rwitzel.streamflyer.core.ModifyingWriter;
-import com.github.rwitzel.streamflyer.regex.AbstractMatchProcessor;
-import com.github.rwitzel.streamflyer.regex.MatchProcessorResult;
-import com.github.rwitzel.streamflyer.regex.RegexModifier;
-import com.google.common.base.Charsets;
-import com.google.common.base.Stopwatch;
-import com.google.common.io.BaseEncoding;
 
 @Mojo(name = "fingerprint", defaultPhase = LifecyclePhase.COMPILE,
 		requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME, threadSafe = true)
@@ -86,8 +84,9 @@ public class FingerprintMojo extends AbstractMojo
 		stylesheetSourcePath =
 			FileSystems.getDefault().getPath(stylesheetSourceDirectory.getAbsolutePath());
 
-		stylesheetBasePaths =
-			stylesheetBaseDirectories.entrySet().stream().collect(Collectors.toMap(Entry::getKey,
+		stylesheetBasePaths = stylesheetBaseDirectories.entrySet()
+			.stream()
+			.collect(Collectors.toMap(Entry::getKey,
 				v -> FileSystems.getDefault().getPath(new File(v.getValue()).getAbsolutePath())));
 
 		outputPath = FileSystems.getDefault().getPath(outputDirectory.getAbsolutePath());
@@ -129,7 +128,7 @@ public class FingerprintMojo extends AbstractMojo
 			}
 			char[] buffer = new char[DEFAULT_BUFFER_SIZE];
 			try (Reader reader = createReader(cssFile);
-					Writer writer = createWriter(cssFile, tempOutputFile))
+				Writer writer = createWriter(cssFile, tempOutputFile))
 			{
 				int numRead = 0;
 				do
@@ -243,6 +242,14 @@ public class FingerprintMojo extends AbstractMojo
 				{
 					imgFile = sharedPath.resolve(matchResult.group(2).substring(3)).normalize();
 				}
+			}
+			// sourcemap comments bevatten de originele LESS met daarin url(@image) als macro. Dit
+			// zorgt ervoor dat je in de else tak terechtkomt, en dat is niet handig want er is geen
+			// @image file beschikbaar. Daarom deze 'hack' om bestandsnamen met @image te negeren
+			else if (matchResult.group(2).equals("@image"))
+			{
+				getLog().info("Skipped @image");
+				return createResult(matchResult, end, true);
 			}
 			else
 			{
