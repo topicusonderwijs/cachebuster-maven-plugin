@@ -7,7 +7,7 @@ node() {
 		maven { }
 	}
 
-	publishTestReports { }
+	reportIssues()
 
 	notify { }
 }
