@@ -1,3 +1,6 @@
+def isPrimary = env.BRANCH_IS_PRIMARY
+def isReleaseBuild = env.TAG_NAME && env.TAG_NAME.startsWith('v')
+
 config { }
 
 node() {
@@ -9,5 +12,6 @@ node() {
 
 	reportIssues()
 
-	notify { }
+	def notifyConfig = isPrimary || isReleaseBuild ? { slackChannel = "#dev-cobra" } : {}
+	notify notifyConfig
 }
