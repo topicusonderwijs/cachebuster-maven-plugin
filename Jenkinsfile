@@ -12,6 +12,6 @@ node() {
 
 	reportIssues()
 
-	def notifyConfig = isPrimary || isReleaseBuild ? { slackChannel = "#dev-cobra" } : {}
+	def notifyConfig = isPrimary || isReleaseBuild ? { slackChannel = "#dev-cobra-notifications" } : {}
 	notify notifyConfig
 }
