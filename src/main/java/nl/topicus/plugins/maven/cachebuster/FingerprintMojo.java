@@ -102,7 +102,14 @@ public class FingerprintMojo extends AbstractMojo
 			new SuffixFileFilter(".css"), TrueFileFilter.INSTANCE);
 		while (fileIterator.hasNext())
 		{
-			fingerprintIfChanged(fileIterator.next());
+			try
+			{
+				fingerprintIfChanged(fileIterator.next());
+			}
+			catch (FileNotFoundException e)
+			{
+				throw new MojoExecutionException(e);
+			}
 		}
 
 		getLog().info("Complete fingerprint job finished in "
@@ -110,7 +117,7 @@ public class FingerprintMojo extends AbstractMojo
 	}
 
 	private void fingerprintIfChanged(File cssFile)
-			throws MojoExecutionException, MojoFailureException
+			throws MojoExecutionException, MojoFailureException, FileNotFoundException
 	{
 		getLog().debug("Source file: " + cssFile.getAbsolutePath());
 		Path output = createOutputDirectory(cssFile);
