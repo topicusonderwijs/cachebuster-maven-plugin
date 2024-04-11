@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>nl.topicus.onderwijs.parent</groupId>
 		<artifactId>onderwijs-parent-base</artifactId>
-		<version>2023.7.53</version>
+		<version>2024.3.2</version>
 	</parent>
 
 	<groupId>nl.topicus</groupId>
@@ -24,6 +24,7 @@
 
 	<properties>
 		<streamflyer.version>1.2.0</streamflyer.version>
+		<topicus.version.org.apache.maven.plugins.maven-enforcer-plugin>3.4.1</topicus.version.org.apache.maven.plugins.maven-enforcer-plugin>
 	</properties>
 
 	<dependencyManagement>
@@ -33,10 +34,30 @@
 				<artifactId>streamflyer-core</artifactId>
 				<version>${streamflyer.version}</version>
 			</dependency>
+			<dependency>
+				<groupId>javax.inject</groupId>
+				<artifactId>javax.inject</artifactId>
+				<version>1</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 
 	<dependencies>
+		<dependency>
+			<groupId>org.apache.maven</groupId>
+			<artifactId>maven-core</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.maven</groupId>
+			<artifactId>maven-plugin-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.maven.plugin-tools</groupId>
+			<artifactId>maven-plugin-annotations</artifactId>
+			<scope>provided</scope>
+		</dependency>
 		<dependency>
 			<groupId>com.github.rwitzel.streamflyer</groupId>
 			<artifactId>streamflyer-core</artifactId>
@@ -49,21 +70,84 @@
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.apache.maven</groupId>
-			<artifactId>maven-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.maven</groupId>
-			<artifactId>maven-plugin-api</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.maven.plugin-tools</groupId>
-			<artifactId>maven-plugin-annotations</artifactId>
-		</dependency>
+
 	</dependencies>
 
 	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<version>${topicus.version.org.apache.maven.plugins.maven-enforcer-plugin}</version>
+					<configuration>
+						<rules>
+							<bannedDependencies>
+								<includes>
+									<include>javax.annotation:javax.annotation-api</include>
+									<include>javax.inject:javax.inject</include>
+								</includes>
+							</bannedDependencies>
+							<banClassUsage>
+								<scopes>
+									<scope>compile</scope>
+									<scope>test</scope>
+								</scopes>
+								<bannedClasses>
+									<bannedClass>javax.activation.*</bannedClass>
+									<bannedClass>javax.annotation.Generated</bannedClass>
+									<bannedClass>javax.annotation.ManagedBean</bannedClass>
+									<bannedClass>javax.annotation.PostConstruct</bannedClass>
+									<bannedClass>javax.annotation.Priority</bannedClass>
+									<bannedClass>javax.annotation.Resource*</bannedClass>
+									<bannedClass>javax.annotation.security.*</bannedClass>
+									<bannedClass>javax.annotation.sql.*</bannedClass>
+									<bannedClass>javax.batch.*</bannedClass>
+									<bannedClass>javax.decorator.*</bannedClass>
+									<bannedClass>javax.ejb.*</bannedClass>
+									<bannedClass>javax.el.*</bannedClass>
+									<bannedClass>javax.enterprise.*</bannedClass>
+									<bannedClass>javax.faces.*</bannedClass>
+									<bannedClass>javax.interceptor.*</bannedClass>
+									<bannedClass>javax.jms.*</bannedClass>
+									<bannedClass>javax.json.*</bannedClass>
+									<bannedClass>javax.jws.*</bannedClass>
+									<bannedClass>javax.mail.*</bannedClass>
+									<bannedClass>javax.persistence.*</bannedClass>
+									<bannedClass>javax.resource.*</bannedClass>
+									<bannedClass>javax.security.auth.message.*</bannedClass>
+									<bannedClass>javax.security.enterprise.*</bannedClass>
+									<bannedClass>javax.security.jacc.*</bannedClass>
+									<bannedClass>javax.servlet.*</bannedClass>
+									<bannedClass>javax.transaction.Heuristic*</bannedClass>
+									<bannedClass>javax.transaction.InvalidTransactionException</bannedClass>
+									<bannedClass>javax.transaction.NotSupportedException</bannedClass>
+									<bannedClass>javax.transaction.RollbackException</bannedClass>
+									<bannedClass>javax.transaction.Status</bannedClass>
+									<bannedClass>javax.transaction.Synchronization</bannedClass>
+									<bannedClass>javax.transaction.SystemException</bannedClass>
+									<bannedClass>javax.transaction.Transaction*</bannedClass>
+									<bannedClass>javax.transaction.UserTransaction</bannedClass>
+									<bannedClass>javax.validation.*</bannedClass>
+									<bannedClass>javax.websocket.*</bannedClass>
+									<bannedClass>javax.ws.rs.*</bannedClass>
+									<bannedClass>javax.xml.bind.*</bannedClass>
+									<bannedClass>javax.xml.soap.*</bannedClass>
+									<bannedClass>javax.xml.ws.*</bannedClass>
+								</bannedClasses>
+							</banClassUsage>
+						</rules>
+					</configuration>
+					<dependencies>
+						<dependency>
+							<groupId>nl.topicus.onderwijs.maven</groupId>
+							<artifactId>ban-class-usage</artifactId>
+							<version>1.3</version>
+						</dependency>
+					</dependencies>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
