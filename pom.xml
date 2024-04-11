@@ -24,7 +24,6 @@
 
 	<properties>
 		<streamflyer.version>1.2.0</streamflyer.version>
-		<topicus.version.org.apache.maven.plugins.maven-enforcer-plugin>3.4.1</topicus.version.org.apache.maven.plugins.maven-enforcer-plugin>
 	</properties>
 
 	<dependencyManagement>
@@ -77,9 +76,8 @@
 		<pluginManagement>
 			<plugins>
 				<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-enforcer-plugin</artifactId>
-				<version>${topicus.version.org.apache.maven.plugins.maven-enforcer-plugin}</version>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-enforcer-plugin</artifactId>
 					<configuration>
 						<rules>
 							<bannedDependencies>
