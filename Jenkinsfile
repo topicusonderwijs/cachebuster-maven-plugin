@@ -3,7 +3,7 @@ def isReleaseBuild = env.TAG_NAME && env.TAG_NAME.startsWith('v')
 
 config { }
 
-node("node-22l") {
+node() {
 	git.checkout { }
 	
 	catchError {
